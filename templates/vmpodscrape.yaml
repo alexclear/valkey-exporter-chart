@@ -1,0 +1,28 @@
+{{- if .Values.victoriaMetrics.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+  labels:
+    {{- include "valkey-centralized-exporter.labels" . | nindent 4 }}
+spec:
+  podTargetLabels:
+    - app.kubernetes.io/name
+    - app.kubernetes.io/instance
+  podMetricsEndpoints:
+    - port: http
+      interval: {{ .Values.victoriaMetrics.serviceMonitor.interval }}
+      path: /metrics
+      scheme: http
+      honorLabels: true
+      {{- with .Values.victoriaMetrics.serviceMonitor.metricRelabelings }}
+      metricRelabelConfigs:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  selector:
+    matchLabels:
+      {{- include "valkey-centralized-exporter.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- end }}

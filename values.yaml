@@ -1,0 +1,46 @@
+# Default values for valkey-centralized-exporter
+replicaCount: 3
+
+image:
+  repository: oliver006/redis_exporter
+  tag: v1.58.0
+  pullPolicy: IfNotPresent
+
+valkey:
+  # Default connection password (can be overridden per instance via annotations)
+  password: ""
+  # Connection timeout
+  timeout: 5s
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+service:
+  type: ClusterIP
+  port: 9121
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+victoriaMetrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        regex: "(redis_|valkey_).*"
+        action: keep
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,41 @@
+{{- if .Values.rbac.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+  labels:
+    {{- include "valkey-centralized-exporter.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+  labels:
+    {{- include "valkey-centralized-exporter.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+  labels:
+    {{- include "valkey-centralized-exporter.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "valkey-centralized-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
